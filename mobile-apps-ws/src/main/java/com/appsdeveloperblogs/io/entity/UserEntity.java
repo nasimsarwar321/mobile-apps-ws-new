@@ -31,7 +31,7 @@ public class UserEntity implements Serializable {
 	private String encryptedPassoword;
 	private String emailVerificationToken;
 	@Column(nullable = false)
-	private boolean emailVerificationStatus = false;
+	private Boolean emailVerificationStatus = false;
 	@OneToMany(mappedBy = "userDetails", cascade = CascadeType.ALL)
 	private List<AddressEntity> addresses;
 
@@ -99,11 +99,11 @@ public class UserEntity implements Serializable {
 		this.emailVerificationToken = emailVerificationToken;
 	}
 
-	public boolean isEmailVerificationStatus() {
+	public Boolean getEmailVerificationStatus() {
 		return emailVerificationStatus;
 	}
 
-	public void setEmailVerificationStatus(boolean emailVerificationStatus) {
+	public void setEmailVerificationStatus(Boolean emailVerificationStatus) {
 		this.emailVerificationStatus = emailVerificationStatus;
 	}
 

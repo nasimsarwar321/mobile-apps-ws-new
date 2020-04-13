@@ -4,6 +4,7 @@ import java.awt.print.PageFormat;
 import java.awt.print.Pageable;
 import java.awt.print.Printable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -12,6 +13,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -60,6 +62,8 @@ public class UserServiceImple implements UserService {
 		String publicUserId = utils.generateUserId(20);
 		userEntity.setEncryptedPassoword(bCryptPasswordEncoder.encode(user.getPassword()));
 		userEntity.setUserId(publicUserId);
+		userEntity.setEmailVerificationToken(utils.generateEmailVerificationToken(publicUserId));
+		//userEntity.setEmailVerificationStatus(false);
 		UserEntity storedUserDetails = userRepository.save(userEntity);
 		//UserDto returnValue = new UserDto();
 		//BeanUtils.copyProperties(storedUserDetails, returnValue);
@@ -85,7 +89,11 @@ public class UserServiceImple implements UserService {
 		UserEntity userEntity = userRepository.findByEmail(email);
 		if (userEntity == null)
 			throw new UsernameNotFoundException(email);
-		return new User(userEntity.getEmail(), userEntity.getEncryptedPassoword(), new ArrayList<>());
+	    return new User(userEntity.getEmail(), userEntity.getEncryptedPassoword(),userEntity.getEmailVerificationStatus(),
+				true, true,true, new ArrayList<>());
+		
+		
+		//return new User(userEntity.getEmail(), userEntity.getEncryptedPassoword(), new ArrayList<>());
 	}
 
 	@Override
@@ -138,6 +146,26 @@ public class UserServiceImple implements UserService {
 		}
 
 		return returnValue;
+	}
+
+	@Override
+	public boolean verifyEmailToken(String token) {
+	 boolean returnvalue=false;
+	 UserEntity userEntity = userRepository.findUserByEmailVerificationToken(token);
+	 if(userEntity!=null) {
+		 
+		 boolean hastokenExpried = utils.hastokenExpried(token);
+		 if(!hastokenExpried) {
+			 userEntity.setEmailVerificationToken(null);
+			 userEntity.setEmailVerificationStatus(Boolean.TRUE);
+			 userRepository.save(userEntity);
+			 returnvalue = true;
+			 
+		 }
+			
+	 }
+		 
+		return returnvalue;
 	}
 
 }

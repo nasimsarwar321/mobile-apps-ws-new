@@ -9,6 +9,7 @@ import org.modelmapper.TypeToken;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
+import org.springframework.hateoas.Link;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +34,7 @@ import com.appsdeveloperblogs.ui.model.response.OperationStatusModel;
 import com.appsdeveloperblogs.ui.model.response.RequestOperationName;
 import com.appsdeveloperblogs.ui.model.response.RequestOperationStatus;
 import com.appsdeveloperblogs.ui.model.response.UserRest;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 
 //import antlr.collections.List;
 
@@ -138,8 +140,30 @@ public class UserController {
 	public AddressesRest getUserAddress(@PathVariable String addressId) {
 		AddressDto addressDto = addressService.getAddress(addressId);
 		ModelMapper modelMapper = new ModelMapper();
-		
-		return modelMapper.map(addressDto, AddressesRest.class);
+		Link addressLink = linkTo(UserController.class).slash(addressId).withRel("user");
+		AddressesRest addressRestModel = modelMapper.map(addressDto, AddressesRest.class);
+		addressRestModel.add(addressLink);
+		return addressRestModel;
+
+	}
+
+	// http//localhost:8080/users/email-verification?token=cccchbjcc
+	@GetMapping(path = "/email-verification", produces = { MediaType.APPLICATION_ATOM_XML_VALUE,
+			MediaType.APPLICATION_JSON_VALUE, "application/hal+json" })
+	public OperationStatusModel verifyEmailToken(@PathVariable(value = "token") String token) {
+		OperationStatusModel returnValue = new OperationStatusModel();
+		returnValue.setOperationName(RequestOperationName.YERIFY_EMAIL.name());
+		boolean isVerifed = userService.verifyEmailToken(token);
+		if (isVerifed) {
+
+			returnValue.setOperationResult(RequestOperationStatus.SUCCESS.name());
+
+		} else {
+			returnValue.setOperationResult(RequestOperationStatus.Error.name());
+
+		}
+
+		return returnValue;
 
 	}
 
